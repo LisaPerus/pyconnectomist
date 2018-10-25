@@ -85,7 +85,7 @@ def dwi_to_anatomy(
         nobias_pattern.format(subject_id, ext) for ext in extensions]
     files = []
     for fpatterns in ((apcpattern, ), t1patterns, nobias_pattern,
-                       voronoi_pattern):
+                      voronoi_pattern):
         fpath = []
         for fpattern in fpatterns:
             fpath.extend(glob.glob(fpattern))
