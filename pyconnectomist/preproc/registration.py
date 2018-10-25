@@ -12,6 +12,7 @@ Wrapper to Connectomist's 'Anatomy & Talairach' tab.
 # System import
 import os
 import glob
+import shutil
 import nibabel
 
 # pyConnectomist import
@@ -72,15 +73,26 @@ def dwi_to_anatomy(
                               "t1mri", "*", "{0}.APC".format(subject_id))
     t1pattern = os.path.join(subject_morphologist_dir, "t1mri", "*", "{0}{1}")
     t1patterns = [t1pattern.format(subject_id, ext) for ext in extensions]
+    nobias_pattern = os.path.join(subject_morphologist_dir, "t1mri",
+                                  "default_acquisition", "default_analysis",
+                                  "nobias_{0}{1}")
+    extensions = (".nii.gz", ".han")
+    voronoi_pattern = os.path.join(subject_morphologist_dir, "t1mri",
+                                   "default_acquisition", "default_analysis",
+                                   "segmentation", "voronoi_{0}").format(
+                                   subject_id)
+    nobias_pattern = [
+        nobias_pattern.format(subject_id, ext) for ext in extensions]
     files = []
-    for fpatterns in ((apcpattern, ), t1patterns):
+    for fpatterns in ((apcpattern, ), t1patterns, nobias_pattern,
+                       voronoi_pattern):
         fpath = []
         for fpattern in fpatterns:
             fpath.extend(glob.glob(fpattern))
         if len(fpath) != 1 or not os.path.isfile(fpath[0]):
             raise ConnectomistBadFileError(str(t1patterns))
         files.append(fpath[0])
-    acpcfile, t1file = files
+    acpcfile, t1file, nobiast1, nobiashist, voronoifile = files
 
     # Get the min image dimension
     im = nibabel.load(t1file)
@@ -178,5 +190,16 @@ def dwi_to_anatomy(
         os.mkdir(inner_morphologist_dir)
     dest_brain_file = os.path.join(inner_morphologist_dir, "brain_t1.ima")
     ptk_nifti_to_gis(brain_file, dest_brain_file)
+
+    # > Convert the nobias file in gis format
+    nobiasgisfile = os.path.join(outdir, "nobias_t1.ima")
+    nobiasgisfile = ptk_nifti_to_gis(nobiast1, nobiasgisfile)
+
+    # > Convert the voronoi file in gis format
+    voronoigisfile = os.path.join(outdir, "voronoi_t1.ima")
+    voronoigisfile = ptk_nifti_to_gis(voronoifile, voronoigisfile)
+
+    # > Copy nobias han histogram file in outdir
+    shutil.copy(nobiashist, os.path.join(outdir, "t1.han"))
 
     return outdir
