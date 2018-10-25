@@ -73,19 +73,20 @@ def dwi_to_anatomy(
                               "t1mri", "*", "{0}.APC".format(subject_id))
     t1pattern = os.path.join(subject_morphologist_dir, "t1mri", "*", "{0}{1}")
     t1patterns = [t1pattern.format(subject_id, ext) for ext in extensions]
-    nobias_pattern = os.path.join(subject_morphologist_dir, "t1mri",
-                                  "default_acquisition", "default_analysis",
-                                  "nobias_{0}{1}")
-    extensions = (".nii.gz", ".han")
     voronoi_pattern = os.path.join(subject_morphologist_dir, "t1mri",
-                                   "default_acquisition", "default_analysis",
-                                   "segmentation", "voronoi_{0}").format(
-                                   subject_id)
-    nobias_pattern = [
-        nobias_pattern.format(subject_id, ext) for ext in extensions]
+                                   "default_acquisition", "*",
+                                   "segmentation", "voronoi_{0}{1}")
+    voronoi_patterns = [
+        voronoi_pattern.format(subject_id, ext) for ext in extensions]
+    nobias_pattern = os.path.join(subject_morphologist_dir, "t1mri",
+                                  "default_acquisition", "*", "nobias_{0}{1}")
+    extensions = (".nii.gz", ".nii")
+    nobias_im_patterns = [nobias_pattern.format(subject_id, ext) for ext
+                          in extensions]
+    nobias_hist_pattern = [nobias_pattern.format(subject_id, ".han")]
     files = []
-    for fpatterns in ((apcpattern, ), t1patterns, nobias_pattern,
-                      voronoi_pattern):
+    for fpatterns in ((apcpattern, ), t1patterns, nobias_im_patterns,
+                      nobias_hist_pattern, voronoi_patterns):
         fpath = []
         for fpattern in fpatterns:
             fpath.extend(glob.glob(fpattern))
